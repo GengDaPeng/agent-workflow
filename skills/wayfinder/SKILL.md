@@ -70,11 +70,11 @@ Each ticket is a **child issue** of the map; the tracker's issue id is its ident
 <the decision or investigation this ticket resolves>
 ```
 
-Each ticket carries a `wayfinder:<type>` label — one of `research`, `prototype`, `grilling`, `task` (see [Ticket Types](#ticket-types)). `wayfinder:` labels are the only labels a map and its tickets carry, never a triage or state label such as `ready-for-agent`: they are decisions, not implementation work.
+Each ticket carries a `wayfinder:<type>` label — one of `research`, `prototype`, `grilling`, `task` (see [Ticket Types](#ticket-types)). By default `wayfinder:` labels are the only labels a map and its tickets carry, never a triage or state label such as `ready-for-agent`: they are decisions, not implementation work. Where the tracker configuration also requires a state label, follow it; the `wayfinder:` label still marks a ticket as a decision.
 
 A session **claims** a ticket by assigning it to the dev driving the map, **first**, before any work, so concurrent sessions skip it. That assignee *is* the claim: an open, unassigned ticket is unclaimed.
 
-Blocking uses the tracker's **native** dependency relation where it has one, so the human sees what's takeable in the tracker's own UI; only a tracker without native blocking falls back to a body convention. A ticket is **unblocked** only when every blocking edge is satisfied: by the close-reason contract in the tracker configuration, or, without one, by the blocker being closed. The **frontier** is the open, unblocked, unclaimed children.
+Blocking uses the tracker's **native** dependency relation where it has one, so the human sees what's takeable in the tracker's own UI; only a tracker without native blocking falls back to a body convention. A ticket is **unblocked** only when every blocking edge is satisfied: by the close-reason contract in the tracker configuration, or, without one, by the blocker being closed. The **frontier** is the open, unblocked, unclaimed children that carry a `wayfinder:<type>` label; a map can also hold ordinary child issues, and those are never on its frontier. The tracker configuration may narrow it further.
 
 The answer isn't part of the body — it's recorded on resolution (see [Work through the map](#work-through-the-map)). Assets created while resolving a ticket are linked from the issue, not pasted in.
 
