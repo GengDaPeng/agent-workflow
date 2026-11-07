@@ -82,8 +82,11 @@ assert.deepEqual(evidenceGaps({
     pageInfo: { hasNextPage: true },
   } } } } }],
 }), ['review thread 列表仍有未收集分页。']);
-assert.deepEqual(readyCheckArgs('/repo', '7', 'owner/repo'), [
-  '/repo/scripts/pr-ready-check.js', '--pr', '7', '--repo', 'owner/repo',
+assert.deepEqual(readyCheckArgs('7', 'owner/repo'), [
+  process.execPath, path.join(__dirname, 'ready-check.js'), '--pr', '7', '--repo', 'owner/repo',
+]);
+assert.deepEqual(readyCheckArgs('7', 'owner/repo', { readyCheck: 'node scripts/ready.js --pr {pr} --strict' }), [
+  'node', 'scripts/ready.js', '--pr', '7', '--strict',
 ]);
 assert.deepEqual(failedChecks([
   { name: 'ok', conclusion: 'SUCCESS' },
@@ -170,7 +173,25 @@ assert.deepEqual(contextSnapshotDriftFields({
   contentHash: 'new-hash',
 }), ['updatedAt', 'contentHash']);
 
-function runCollector(metadataSequence, { mode = 'diagnose', cwd = path.resolve(__dirname, '../../../..') } = {}) {
+function gitFixture(prefix, branch) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  fs.writeFileSync(path.join(dir, 'README.md'), 'fixture\n');
+  for (const args of [
+    ['init', '-q', '-b', branch],
+    ['add', 'README.md'],
+    ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', '-c', 'user.name=Fixture',
+      '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Review fixture'],
+  ]) {
+    const result = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
+  return dir;
+}
+
+const diagnoseRepo = gitFixture('collect-pr-diagnose-repo.', 'main');
+process.on('exit', () => fs.rmSync(diagnoseRepo, { recursive: true, force: true }));
+
+function runCollector(metadataSequence, { mode = 'diagnose', cwd = diagnoseRepo } = {}) {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'collect-pr-context-test.'));
   const fakeBin = path.join(tempDir, 'bin');
   const outDir = path.join(tempDir, 'out');
@@ -234,18 +255,8 @@ const driftCollection = runCollector([metadata, metadata, { ...metadata, headRef
 assert.equal(driftCollection.result.status, 2, driftCollection.result.stderr);
 assert(driftCollection.manifest.gaps.some((gap) => gap.includes('末次评论状态取证期间')));
 
-const reviewRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'collect-pr-review-repo.'));
+const reviewRepo = gitFixture('collect-pr-review-repo.', 'review-fixture');
 try {
-  fs.symlinkSync(path.resolve(__dirname, '../../../../scripts'), path.join(reviewRepo, 'scripts'));
-  for (const args of [
-    ['init', '-q', '-b', 'review-fixture'],
-    ['add', 'scripts'],
-    ['-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false', '-c', 'user.name=Fixture',
-      '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Review fixture'],
-  ]) {
-    const result = spawnSync('git', args, { cwd: reviewRepo, encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stderr);
-  }
   const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: reviewRepo, encoding: 'utf8' }).stdout.trim();
   const reviewMetadata = {
     ...metadata, headRefName: 'review-fixture', headRefOid: head,

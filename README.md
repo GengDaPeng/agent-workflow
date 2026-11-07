@@ -12,6 +12,29 @@
 
 Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数文件缺的项按 Skill 默认值执行。
 
+## 共享检查脚本
+
+只带轻量检查，重型 CI 证据复用留在使用方仓库。脚本从使用方仓库根的 `.agents/project.json` 读机器参数，文件缺失时全部用默认值：
+
+| 字段 | 缺省 | 说明 |
+|---|---|---|
+| `repository` | `gh repo view` | `owner/name` |
+| `mainRef` | `origin/main` | 主线引用 |
+| `gitWrapper` | `git` | 写公共 Git 目录时用的命令 |
+| `commentIdentityPrefix` | 任意 `<项目>-<模型ID>` | 评论身份行前缀 |
+| `taskIdPattern` | 通用任务编号正则 | 任务卡 Task 字段 |
+| `readyCheck` | `pr-review/scripts/ready-check.js` | 项目自己的 Ready 命令模板，`{pr}` 替换为 PR 号 |
+
+| 脚本 | 作用 |
+|---|---|
+| `pr-delivery/scripts/pr-body-check.js` | PR 正文必需段、Context、Verification、Merge Danger、Draft 与分级 |
+| `pr-review/scripts/pr-comments-check.js` | REVIEW / RECHECK 评论字段与 current head 通过凭据 |
+| `pr-review/scripts/ready-check.js` | 轻量 Ready：正文、通过凭据、检查全绿、可合并、Draft |
+| `project-control/scripts/task-card-check.js` | 置顶任务卡校验与 artifact |
+| `git-workflow/scripts/skills-lock-check.js` | 已安装 Skill 与 `skills-lock.json` 散列一致，可放进 pre-commit |
+
+跨 Skill 依赖只有 `pr-review → pr-delivery`。本仓库自测：`npm test`。
+
 ## Skill
 
 | Skill | 用途 |

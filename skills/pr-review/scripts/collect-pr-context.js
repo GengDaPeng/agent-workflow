@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { checkPrContext, parseTaskCommentUrl } = require('../../pr-delivery/scripts/pr-body-check');
+const { installedProjectConfig, splitCommand } = require('../../pr-delivery/scripts/project-config');
 
 const MODES = new Set(['diagnose', 'review', 'handoff', 'publish']);
 const FOCUSES = new Set(['ci', 'comments', 'context', 'scope', 'ready']);
@@ -178,22 +180,13 @@ function repositoryRoot() {
   return command('git', ['rev-parse', '--show-toplevel'], process.cwd()).trim();
 }
 
-function collectContext({ metadata, repo, root, outDir, gh, artifactPrefix = '' }) {
-  const {
-    checkPrContext,
-  } = require(path.join(root, 'scripts/pr-delivery-check'));
-  const checked = checkPrContext({
-    body: metadata.body,
-    repository: repo,
-    ghRunner: (args) => {
-      try { return { status: 0, stdout: gh(args), stderr: '' }; }
-      catch (error) { return { status: 1, stdout: '', stderr: error.message }; }
-    },
-  });
+// 只做正文解析与任务评论 URL 归属校验；任务卡的置顶、Issue 状态等由项目 Ready 检查负责。
+function collectContext({ metadata, repo, outDir, gh, artifactPrefix = '' }) {
+  const checked = checkPrContext({ body: metadata.body, repository: repo });
   if (checked.errors.length) throw new Error(checked.errors.join('；'));
-  const context = checked.context;
-  writeArtifact(outDir, `${artifactPrefix}context.json`, context);
+  let context = checked.context;
   if (context.source === 'discussion') {
+    writeArtifact(outDir, `${artifactPrefix}context.json`, context);
     return {
       summary: {
         contract: 'discussion-context',
@@ -205,8 +198,11 @@ function collectContext({ metadata, repo, root, outDir, gh, artifactPrefix = '' 
       context,
     };
   }
+  const { issueNumber, commentId } = parseTaskCommentUrl(context.reference);
+  const comment = JSON.parse(gh(['api', `repos/${repo}/issues/comments/${commentId}`]));
+  context = { ...context, issueNumber, commentId, updatedAt: comment.updated_at };
+  writeArtifact(outDir, `${artifactPrefix}context.json`, context);
   writeArtifact(outDir, `${artifactPrefix}task-card.json`, context);
-  const comment = JSON.parse(gh(['api', `repos/${repo}/issues/comments/${context.commentId}`]));
   writeArtifact(outDir, `${artifactPrefix}task-card-comment.json`, comment);
   return {
     summary: {
@@ -229,7 +225,7 @@ function flattenGhPages(value) {
   return Array.isArray(value) ? value.flatMap((page) => Array.isArray(page) ? page : [page]) : [];
 }
 
-function collectDiff({ metadata, repo, root, outDir, pr, gh, localFallback }) {
+function collectDiff({ metadata, repo, root, outDir, pr, gh, localFallback, config }) {
   try {
     const diff = gh(['pr', 'diff', pr, '--repo', repo]);
     const pages = JSON.parse(gh(['api', '--paginate', '--slurp', `repos/${repo}/pulls/${pr}/files?per_page=100`]));
@@ -240,7 +236,8 @@ function collectDiff({ metadata, repo, root, outDir, pr, gh, localFallback }) {
   } catch (error) {
     if (!localFallback) throw error;
     const prefix = `refs/remotes/origin/pr-review/${pr}`;
-    command('bash', [path.join(root, 'scripts/wt-git.sh'), 'fetch', 'origin',
+    const [git, ...wrapperArgs] = splitCommand(config.gitWrapper || 'git');
+    command(git, [...wrapperArgs, 'fetch', 'origin',
       `${metadata.baseRefName}:${prefix}/base`, `pull/${pr}/head:${prefix}/head`], root);
     const remoteHead = command('git', ['rev-parse', `${prefix}/head`], root).trim();
     if (remoteHead !== metadata.headRefOid) throw new Error('本地回退取得的远端 head 与固定 headRefOid 不一致。');
@@ -282,16 +279,19 @@ function collectWorktree(root) {
   };
 }
 
-function readyCheckArgs(root, pr, repo) {
-  const args = [path.join(root, 'scripts/pr-ready-check.js'), '--pr', pr];
+/** 返回完整命令行：项目配置了 readyCheck 模板就按模板（{pr} 替换为 PR 号），否则用共享 ready-check.js。 */
+function readyCheckArgs(pr, repo, config = {}) {
+  if (config.readyCheck) return splitCommand(config.readyCheck.split('{pr}').join(pr));
+  const args = [process.execPath, path.join(__dirname, 'ready-check.js'), '--pr', pr];
   if (repo) args.push('--repo', repo);
   return args;
 }
 
-function collectReady({ metadata, root, pr, repo }) {
+function collectReady({ metadata, root, pr, repo, config }) {
   const head = command('git', ['rev-parse', 'HEAD'], root).trim();
   if (head !== metadata.headRefOid) return { skipped: '当前 worktree HEAD 不对应 PR head；未运行本地 Ready gate。' };
-  const result = spawnSync('node', readyCheckArgs(root, pr, repo), {
+  const [program, ...args] = readyCheckArgs(pr, repo, config);
+  const result = spawnSync(program, args, {
     cwd: root, encoding: 'utf8', stdio: 'pipe', maxBuffer: 64 * 1024 * 1024,
   });
   return { status: result.status, stdout: result.stdout || '', stderr: result.stderr || '' };
@@ -321,8 +321,10 @@ function collectCi({ metadata, repo, outDir, gh }) {
 
 function collect(args) {
   const root = repositoryRoot();
+  const config = installedProjectConfig();
   const pr = args.pr;
-  const repo = args.repo || jsonCommand('gh', ['repo', 'view', '--json', 'nameWithOwner'], root).nameWithOwner;
+  const repo = args.repo || config.repository
+    || jsonCommand('gh', ['repo', 'view', '--json', 'nameWithOwner'], root).nameWithOwner;
   const outDir = args['out-dir']
     ? path.resolve(args['out-dir'])
     : fs.mkdtempSync(path.join(os.tmpdir(), `pr-review-${pr}.`));
@@ -353,14 +355,14 @@ function collect(args) {
   }
   if (plan.includes('context')) {
     attempt('PR Context', () => {
-      const context = collectContext({ metadata, repo, root, outDir, gh });
+      const context = collectContext({ metadata, repo, outDir, gh });
       manifest.context = context.summary;
       Object.assign(evidence, context);
     });
   }
   if (plan.includes('diff')) {
     attempt('diff', () => {
-      const diff = collectDiff({ metadata, repo, root, outDir, pr, gh, localFallback: args['local-fallback'] === 'true' });
+      const diff = collectDiff({ metadata, repo, root, outDir, pr, gh, localFallback: args['local-fallback'] === 'true', config });
       evidence.changedFiles = diff.changedFiles;
       manifest.diff = { source: diff.source, changedFiles: diff.changedFiles.length };
     });
@@ -375,7 +377,7 @@ function collect(args) {
   }
   if (plan.includes('ready')) {
     attempt('Ready gate', () => {
-      evidence.ready = collectReady({ metadata, root, pr, repo });
+      evidence.ready = collectReady({ metadata, root, pr, repo, config });
       manifest.ready = evidence.ready;
       writeArtifact(outDir, 'ready-check.json', manifest.ready);
     });
@@ -427,7 +429,6 @@ function collect(args) {
       const finalContext = collectContext({
         metadata: finalMetadata,
         repo,
-        root,
         outDir,
         gh,
         artifactPrefix: 'final-',
