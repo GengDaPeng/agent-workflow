@@ -47,7 +47,7 @@ Start with the standards sources named by the task, then the entry points in the
 
 If framework behavior is not settled by those sources, verify it against the installed types / source or current official documentation. Report only a concrete consequence in changed code, not a generic departure from “best practice”.
 
-For every code review, the Standards axis covers the fixed baseline in [`references/code-quality.md`](references/code-quality.md), including its twelve structural clues and all applicable quality checks. Coverage does not depend on first suspecting a risk. Reuse the current baseline when already available in context; source pointers replace repeated copying, not review coverage. Repository rules take precedence; these checks are judgement aids, a code shape alone is not a finding, and the remedy follows the concrete consequence and project constraints.
+For every code review, the Standards axis also carries the baseline in [`references/code-quality.md`](references/code-quality.md). Repository rules override it, and each hit is a judgement call that must name a reachable consequence.
 
 ### 4. Split bounded axis groups and spawn sub-agents
 
@@ -62,7 +62,7 @@ Give each group the fixed review version or diff, its scope, and source paths wi
 **Standards sub-agent prompt** — include:
 
 - This group's bounded owner / risk / diff scope and the neighboring invariant it must not sever.
-- The standards-source pointers identified in step 3, including the fixed code-quality baseline to cover within this group's scope when reviewing code.
+- The standards-source pointers identified in step 3, plus the code-quality baseline when reviewing code.
 - The brief: "Report documented-standard violations and concrete engineering risks in this scope. Cite the rule or evidence to the level the review parameters require, quote the relevant hunk, and explain the reachable consequence. Distinguish hard violations from judgement calls; generic lenses do not prescribe a fix or override repository rules. Skip issues already enforced by tooling. Under 400 words."
 
 **Spec sub-agent prompt** — include:
