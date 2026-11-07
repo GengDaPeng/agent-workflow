@@ -10,7 +10,7 @@ description: 启用独立会话之间的通信：只在规定事件、按固定�
 
 - 局部子代理只向调用方返回结果，不用跨会话通信工具，也不找其他会话联系人；继承的上下文、联系人或 Skill 调用都不改变这一点。
 - 开工指令（会话第一条命令）带 `$agent-message` 标识，表示本会话获准使用本 Skill，持续到协作结束或明确停用；历史引用不算。加载用 `/agent-message`。
-- 启用不增加授权，也不解除停止点。读取项目参数文件 [`docs/agents/control.md`](../../../docs/agents/control.md) 中的角色、审查方式、停止边界与正式记录位置。
+- 启用不增加授权，也不解除停止点。读取项目参数文件 [`docs/agents/control.md`](../../../docs/agents/control.md) 中的审查方式与停止边界。下文的原记录指任务所在的 Issue、PR 或 Discussion 评论。
 
 ## 什么时候发
 
