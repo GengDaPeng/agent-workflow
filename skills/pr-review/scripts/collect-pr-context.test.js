@@ -8,6 +8,7 @@ const { spawnSync } = require('node:child_process');
 const {
   actionRunId,
   buildDecisionSummary,
+  collectContext,
   collectionPlan,
   compareSnapshots,
   evidenceGaps,
@@ -284,6 +285,47 @@ try {
   }
 } finally {
   fs.rmSync(reviewRepo, { recursive: true, force: true });
+}
+
+// 任务卡软依赖：同级装了 project-control 就校验置顶 / Issue Open / status:tasked / Grade，没装只校验 URL 并留 note。
+{
+  const repo = 'example/app';
+  const taskUrl = `https://github.com/${repo}/issues/45#issuecomment-678`;
+  const card = (overrides = {}) => ({
+    id: 678, html_url: taskUrl, issue_url: `https://api.github.com/repos/${repo}/issues/45`,
+    updated_at: '2026-11-01T00:00:00Z', pin: { pinned_at: '2026-11-01T00:00:00Z' },
+    body: '评论者：demo-model\n[TASK-CARD]\n- Task: APP-UI-7\n- Grade: A级\n\n## 完成条件\n- 做完\n\n## 范围\n- a\n\n## 不做\n- b\n\n## 正式依据\n- c\n\n## 验证\n- npm test\n\n## 前置 / 阻断\n- 无\n',
+    ...overrides,
+  });
+  const fakeGh = (comment, issue = { state: 'open', labels: [{ name: 'status:tasked' }] }) => (args) => JSON.stringify(
+    args[1].endsWith('/comments/678') ? comment : args[1].endsWith('/comments?per_page=100') ? [[comment]] : issue);
+  const prBody = (grade = 'A级') => `## Context\n- Source: task-card\n- Task: ${taskUrl}\n- 分级：${grade}\n`;
+  const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'collect-context-'));
+  try {
+    const checked = collectContext({ metadata: { body: prBody() }, repo, outDir, gh: fakeGh(card()) });
+    assert.equal(checked.note, undefined);
+    assert.equal(checked.context.task, 'APP-UI-7');
+    assert.equal(checked.summary.commentId, '678');
+    for (const [comment, issue, grade, error] of [
+      [card({ pin: null }), undefined, 'A级', /置顶/],
+      [card(), { state: 'closed', labels: [{ name: 'status:tasked' }] }, 'A级', /Open/],
+      [card(), { state: 'open', labels: [{ name: 'status:waiting' }] }, 'A级', /status:tasked/],
+      [card(), undefined, 'S级', /Grade 不一致/],
+    ]) {
+      assert.throws(() => collectContext({ metadata: { body: prBody(grade) }, repo, outDir, gh: fakeGh(comment, issue) }), error);
+    }
+
+    const unchecked = collectContext({
+      metadata: { body: prBody() }, repo, outDir, gh: fakeGh(card({ pin: null })),
+      taskCardCheck: path.join(outDir, 'missing/task-card-check.js'),
+    });
+    assert.equal(unchecked.note, '未安装 project-control，任务卡未校验（只校验了任务评论 URL 归属）。');
+    assert.equal(unchecked.summary.commentId, '678');
+    assert.equal(unchecked.taskCard.updatedAt, '2026-11-01T00:00:00Z');
+    assert.deepEqual(buildDecisionSummary({ pr: 7, mode: 'review', outDir, metadata: {}, gaps: [], notes: [unchecked.note] }).notes, [unchecked.note]);
+  } finally {
+    fs.rmSync(outDir, { recursive: true, force: true });
+  }
 }
 
 console.log('collect-pr-context 自检通过。');

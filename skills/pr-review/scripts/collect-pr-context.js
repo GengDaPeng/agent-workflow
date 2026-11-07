@@ -180,9 +180,26 @@ function repositoryRoot() {
   return command('git', ['rev-parse', '--show-toplevel'], process.cwd()).trim();
 }
 
-// 只做正文解析与任务评论 URL 归属校验；任务卡的置顶、Issue 状态等由项目 Ready 检查负责。
-function collectContext({ metadata, repo, outDir, gh, artifactPrefix = '' }) {
-  const checked = checkPrContext({ body: metadata.body, repository: repo });
+const TASK_CARD_CHECK = path.join(__dirname, '../../project-control/scripts/task-card-check.js');
+const TASK_CARD_UNCHECKED = '未安装 project-control，任务卡未校验（只校验了任务评论 URL 归属）。';
+
+/**
+ * 软依赖：同级安装了 project-control 时注入它的任务卡检查（置顶、Issue Open、status:tasked、Grade 一致）；
+ * 未安装时只校验正文与任务评论 URL 归属，并返回 note。
+ */
+function collectContext({ metadata, repo, outDir, gh, artifactPrefix = '', config = {}, taskCardCheck = TASK_CARD_CHECK }) {
+  const taskCards = fs.existsSync(taskCardCheck) ? require(taskCardCheck) : null;
+  const checked = checkPrContext({
+    body: metadata.body,
+    repository: repo,
+    ...(taskCards ? {
+      checkTaskCard: (input) => taskCards.checkCurrentTaskCard({ ...input, taskIdPattern: config.taskIdPattern }),
+      ghRunner: (args) => {
+        try { return { status: 0, stdout: gh(args), stderr: '' }; }
+        catch (error) { return { status: 1, stdout: '', stderr: error.message }; }
+      },
+    } : {}),
+  });
   if (checked.errors.length) throw new Error(checked.errors.join('；'));
   let context = checked.context;
   if (context.source === 'discussion') {
@@ -200,7 +217,7 @@ function collectContext({ metadata, repo, outDir, gh, artifactPrefix = '' }) {
   }
   const { issueNumber, commentId } = parseTaskCommentUrl(context.reference);
   const comment = JSON.parse(gh(['api', `repos/${repo}/issues/comments/${commentId}`]));
-  context = { ...context, issueNumber, commentId, updatedAt: comment.updated_at };
+  context = { ...context, issueNumber, commentId, updatedAt: context.updatedAt ?? comment.updated_at };
   writeArtifact(outDir, `${artifactPrefix}context.json`, context);
   writeArtifact(outDir, `${artifactPrefix}task-card.json`, context);
   writeArtifact(outDir, `${artifactPrefix}task-card-comment.json`, comment);
@@ -218,6 +235,7 @@ function collectContext({ metadata, repo, outDir, gh, artifactPrefix = '' }) {
     context,
     taskCard: context,
     taskComment: comment,
+    ...(taskCards ? {} : { note: TASK_CARD_UNCHECKED }),
   };
 }
 
@@ -355,8 +373,9 @@ function collect(args) {
   }
   if (plan.includes('context')) {
     attempt('PR Context', () => {
-      const context = collectContext({ metadata, repo, outDir, gh });
+      const context = collectContext({ metadata, repo, outDir, gh, config });
       manifest.context = context.summary;
+      if (context.note) manifest.notes = [context.note];
       Object.assign(evidence, context);
     });
   }
@@ -431,6 +450,7 @@ function collect(args) {
         repo,
         outDir,
         gh,
+        config,
         artifactPrefix: 'final-',
       });
       const contextDrift = contextSnapshotDriftFields(initialContext, finalContext.summary);
@@ -477,6 +497,7 @@ function buildDecisionSummary(manifest) {
     context: manifest.context?.contract || null,
     grade: manifest.context?.grade || null,
     gaps: manifest.gaps,
+    ...(manifest.notes?.length ? { notes: manifest.notes } : {}),
     ...(Array.isArray(manifest.changedSincePrevious)
       ? { changedSincePrevious: manifest.changedSincePrevious }
       : {}),
@@ -499,6 +520,7 @@ if (require.main === module) main();
 
 module.exports = {
   buildDecisionSummary,
+  collectContext,
   collectionPlan,
   compareSnapshots,
   evidenceGaps,
