@@ -1,0 +1,5 @@
+interface:
+  display_name: "议题分诊"
+  short_description: "核实并分流 Issue 与外部 PR"
+policy:
+  allow_implicit_invocation: false
