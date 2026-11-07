@@ -7,12 +7,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DEFAULTS = Object.freeze({ mainRef: 'origin/main', gitWrapper: 'git' });
+const DEFAULTS = Object.freeze({ gitWrapper: 'git' });
 
 const nonEmpty = () => true;
 const FIELDS = {
   repository: (value) => /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value) || '必须是 owner/name',
-  mainRef: nonEmpty,
   gitWrapper: nonEmpty,
   commentIdentityPrefix: (value) => /^[^\s-]+$/.test(value) || '不能含空白或连字符',
   taskIdPattern: (value) => {

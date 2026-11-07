@@ -78,16 +78,16 @@ test('注入的任务卡检查决定最终 Context，并核对分级', () => {
 test('project.json：缺失用默认值，字段错误写明字段，安装布局定位仓库根', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-config-'));
   try {
-    assert.deepEqual(loadProjectConfig(root), { mainRef: 'origin/main', gitWrapper: 'git' });
+    assert.deepEqual(loadProjectConfig(root), { gitWrapper: 'git' });
     fs.mkdirSync(path.join(root, '.agents'));
     const write = (value) => fs.writeFileSync(path.join(root, '.agents/project.json'), JSON.stringify(value));
     write({ repository: REPO, commentIdentityPrefix: 'app', readyCheck: 'make ready PR={pr}' });
     assert.equal(loadProjectConfig(root).readyCheck, 'make ready PR={pr}');
-    assert.equal(loadProjectConfig(root).mainRef, 'origin/main');
+    assert.equal(loadProjectConfig(root).gitWrapper, 'git');
     for (const [value, field] of [
       [{ repository: 'no-slash' }, 'repository'], [{ taskIdPattern: '(' }, 'taskIdPattern'],
       [{ readyCheck: 'make ready' }, 'readyCheck'], [{ gitWrapper: '' }, 'gitWrapper'],
-      [{ commentIdentityPrefix: 'a-b' }, 'commentIdentityPrefix'], [{ mainRef: 1 }, 'mainRef'],
+      [{ commentIdentityPrefix: 'a-b' }, 'commentIdentityPrefix'],
     ]) {
       write(value);
       assert.throws(() => loadProjectConfig(root), new RegExp(`字段 ${field} 格式错误`));

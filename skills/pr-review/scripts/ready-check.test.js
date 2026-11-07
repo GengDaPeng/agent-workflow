@@ -72,3 +72,42 @@ test('CLI 读取 live PR 并设置退出码', () => {
   assert.deepEqual(out.slice(0, 1), ['ready 检查通过。']);
   assert.match(out[1], /mergeable=UNKNOWN/);
 });
+
+test('装了 project-control 时校验 task-card 来源的任务卡，没装时只看正文', () => {
+  const taskUrl = `https://github.com/${REPO}/issues/45#issuecomment-678`;
+  const card = (overrides = {}) => ({
+    id: 678, html_url: taskUrl, issue_url: `https://api.github.com/repos/${REPO}/issues/45`,
+    updated_at: '2026-11-01T00:00:00Z', pin: { pinned_at: '2026-11-01T00:00:00Z' },
+    body: '评论者：demo-model\n[TASK-CARD]\n- Task: APP-UI-7\n- Grade: A级\n\n## 完成条件\n- 做完\n\n## 范围\n- a\n\n## 不做\n- b\n\n## 正式依据\n- c\n\n## 验证\n- npm test\n\n## 前置 / 阻断\n- 无\n',
+    ...overrides,
+  });
+  const taskBody = (grade = 'A级') => body(grade).replace(
+    /Source: discussion\n分级：.+\n- 本轮在持续讨论中形成了本次修改。\n/, `- Source: task-card\n- Task: ${taskUrl}\n- 分级：${grade}\n`);
+  const gh = (comment, issue = { state: 'open', labels: [{ name: 'status:tasked' }] }, grade = 'A级') => (args) => ({
+    status: 0, stderr: '',
+    stdout: JSON.stringify(args[0] === 'pr' ? { ...ready, body: taskBody(grade) }
+      : args[1].endsWith('/comments/678') ? comment : args[1].endsWith('/comments?per_page=100') ? [[comment]] : issue),
+  });
+  const cli = (ghStub, options = {}) => {
+    const out = []; const log = console.log; const error = console.error;
+    console.log = (line) => out.push(line); console.error = (line) => out.push(line);
+    try {
+      main(['--pr', '7'], { gh: ghStub, config: { repository: REPO }, isAncestor: () => false, ...options });
+      return { code: process.exitCode, out: out.join('\n') };
+    } finally {
+      console.log = log; console.error = error; process.exitCode = undefined;
+    }
+  };
+  assert.equal(cli(gh(card())).code, undefined);
+  for (const [comment, issue, grade, error] of [
+    [card({ pin: null }), undefined, 'A级', /置顶/],
+    [card(), { state: 'closed', labels: [{ name: 'status:tasked' }] }, 'A级', /Open/],
+    [card(), undefined, 'S级', /Grade 不一致/],
+  ]) {
+    const result = cli(gh(comment, issue, grade));
+    assert.equal(result.code, 1);
+    assert.match(result.out, error);
+  }
+  const unchecked = cli(gh(card({ pin: null })), { taskCardCheck: '/nonexistent/task-card-check.js' });
+  assert.equal(unchecked.code, undefined, unchecked.out);
+});
