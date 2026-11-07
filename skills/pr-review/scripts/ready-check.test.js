@@ -29,6 +29,13 @@ test('按正文 → 凭据 → 检查 → mergeable → Draft 的顺序报错', 
   assert.match(errors.at(-1), /不接受草稿/);
 });
 
+test('缺分级或分级无法识别时失败，不跳过复核检查', () => {
+  for (const text of [body().replace('分级：A级\n', ''), body('C级')]) {
+    const errors = run({ body: text, comments: [] });
+    assert(errors.includes('无法从 PR 正文 ## Context 确定分级（B级 / A级 / S级），不能判定独立复核要求。'), errors.join('\n'));
+  }
+});
+
 test('--allow-draft 只放行 A/S 草稿；B级草稿仍拒绝', () => {
   assert.deepEqual(run({ isDraft: true }, { allowDraft: true }), []);
   const bDraft = run({ body: body('B级'), isDraft: true }, { allowDraft: true });

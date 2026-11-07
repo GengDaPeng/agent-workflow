@@ -5,6 +5,7 @@
  * 依次检查：live PR 正文过正文核心；current head 有 REVIEW / RECHECK PASS 凭据；
  * statusCheckRollup 全绿；mergeable；Draft 规则（--allow-draft 只放行 A级 / S级草稿）。
  * 边界：不跑测试、不复用 CI 证据、不读 diff；项目有更重的 Ready 门禁时在 .agents/project.json 配 readyCheck。
+ * 信任模型：评论身份行由作者自己声明，用于区分代理，不作为安全边界；本检查防代理失误，不防恶意作者。
  * 用法：node ready-check.js --pr <number> [--repo owner/name] [--allow-draft]
  */
 const { spawnSync } = require('node:child_process');
@@ -54,7 +55,7 @@ function checkReady(metadata, { repository, allowDraft = false, identityPrefix, 
       taskLevel: grade,
       identityPrefix,
       isReviewVersionAncestor: (version) => isAncestor(version, head),
-    }) : []),
+    }) : ['无法从 PR 正文 ## Context 确定分级（B级 / A级 / S级），不能判定独立复核要求。']),
     ...checkStatusChecks(metadata.statusCheckRollup),
     ...checkMergeable(metadata.mergeable),
     ...(draft ? ['正式 Ready 检查不接受草稿；A/S 转换前预检须显式使用 --allow-draft。'] : []),

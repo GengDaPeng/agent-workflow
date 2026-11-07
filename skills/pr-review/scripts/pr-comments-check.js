@@ -5,6 +5,8 @@
  * 触发：CLI 校验正文文件 / 发布回读；Ready 检查调用通过凭据检查。不重建评论语义闭环。
  * 逻辑：只核对评论身份、任务分级、审查 / 复核版本、通过结论和版本对 current head 的适用性。
  * 身份前缀来自 .agents/project.json 的 commentIdentityPrefix；未配置时接受任意“<项目>-<模型ID>”。
+ * 信任模型：身份行由作者自己声明，不核对 GitHub 账号（多个代理可共用一个账号）；它用于区分代理，
+ * 不作为安全边界，防的是失误，不是恶意。
  */
 const path = require('node:path');
 const { installedProjectConfig } = require('../../pr-delivery/scripts/project-config');
