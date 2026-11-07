@@ -1,0 +1,5 @@
+interface:
+  display_name: "Agent Message"
+  short_description: "Message other agent sessions by fixed templates"
+policy:
+  allow_implicit_invocation: false

@@ -28,7 +28,18 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 | `wayfinder` | 手动调用：把过大的想法拆成决策票地图，逐张解决 |
 | `improve-codebase-architecture` | 手动调用：找出可加深的模块，出 HTML 报告后逐个讨论 |
 | `two-axis-code-review` | 按规范与需求两条轴审查一段改动 |
+| `pr-review` | 审查或诊断 live PR 的 current head；REVIEW / FIX-REPLY / RECHECK 评论协议 |
+| `pr-delivery` | 创建或更新 PR、写正文、等 CI、修交付门禁、转 Ready |
+| `implement` | 按任务实现或修复，处理审查发现并发 FIX-REPLY |
+| `task-closure` | 判断发现项归属、根因修复范围、任务完成与修复停止线 |
+| `agent-message` | 手动调用：独立会话之间按固定事件和模板通信 |
+| `project-control` | 手动调用：受委托担任项目主控，安排、派发、决定与收尾 |
+| `grilling` | 按决策树逐轮追问，直到双方理解一致 |
+| `research` | 对照一手资料调研并标注出处 |
+| `prototype` | 做一次性原型回答设计问题（逻辑或界面） |
 
 ## 致谢
 
-除 `git-workflow` 外，上表 Skill 派生自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT，许可见 [LICENSE.matt-pocock](LICENSE.matt-pocock)），`two-axis-code-review` 由其 `code-review` 改造而来。
+`codebase-design`、`diagnosing-bugs`、`domain-modeling`、`tdd`、`wait-what`、`writing-for-agents`、`triage`、`to-tickets`、`wayfinder`、`improve-codebase-architecture`、`grilling`、`research`、`prototype` 派生自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT，许可见 [LICENSE.matt-pocock](LICENSE.matt-pocock)）；`two-axis-code-review` 由其 `code-review` 改造而来，`implement` 以其 `implement` 为骨架，`pr-delivery` 的 PR 正文写法改编自其 `pr`。`pr` 中 Summary 的视图清单出自 [Dex Horthy](https://github.com/dexhorthy) 的 [`show-me`](https://github.com/humanlayer/humanlayer)。
+
+`git-workflow`、`pr-review`、`pr-delivery`、`task-closure`、`agent-message`、`project-control` 是本仓库在多代理协作中整理出的约定。

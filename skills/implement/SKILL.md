@@ -1,0 +1,16 @@
+---
+name: implement
+description: 按任务卡、规格或 Issue 实现或修复生产行为时使用，包括生产代码、运行配置、数据迁移和自动化脚本；也用于核验并处理 PR 审查发现或开发中收到的审查结论，并准备 FIX-REPLY。
+---
+
+开始前读取项目参数文件 [`docs/agents/git.md`](../../../docs/agents/git.md)。参数文件应提供设计检查点使用的 Skill；没有时跳过设计检查点。测试政策由 `tdd` 自己读取。
+
+实现用户给出的任务卡、规格或 Issue。给的是 Issue 引用就先从 tracker 取回并报出标题；引用不明确就问。以审查评论或结论为输入时，直接读 [review-fix](references/review-fix.md)。
+
+每步到了才加载该步点名的 Skill，不预读后面的。
+
+- 改动会改变业务对象、语义、负责方、权限、状态、事实源、跨模块契约或架构时，首次相关写入前调用 Skill 工具：参数文件指定的设计 Skill。实施中设计不再成立，回到这一步。
+- 新增或调整测试、验证脚本、fixture 或执行范围前，调用 Skill 工具：`tdd`，读其 `test-design` reference；在约定的 seam 处测试先行。
+- 定期跑类型检查和单个测试文件；形成稳定候选后，跑任务要求的完整验证。原因不明、性能回归或同一假设反复失败时，调用 Skill 工具：`diagnosing-bugs`。
+- 任务命题装不下所需工作时，停止受影响部分，调用 Skill 工具：`task-closure` 报告边界，不在实现上下文设计子任务。
+- 做完后对照任务、实际 diff 和验证自审，提交到当前任务分支；交付调用 Skill 工具：`pr-delivery`。

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Project Control"
+  short_description: "Act as the delegated project controller"
+policy:
+  allow_implicit_invocation: false

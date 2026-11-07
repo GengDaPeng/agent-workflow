@@ -1,0 +1,3 @@
+interface:
+  display_name: "Task Closure"
+  short_description: "Dispose findings and judge task completion"

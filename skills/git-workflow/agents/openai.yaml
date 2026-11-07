@@ -1,0 +1,3 @@
+interface:
+  display_name: "Git Workflow"
+  short_description: "Shared Git and GitHub collaboration rules"

@@ -22,6 +22,7 @@ description: 多代理用 Git 与 GitHub（Issue、PR、Discussion）协作时�
 - 建分支：`git fetch <remote> && git worktree add --no-track -b <type>/<任务编号>-<topic> <路径> <主线ref>`。子任务以父任务的精确 SHA 为基点，在自己的新 worktree 里建，不在父工作位切分支。分支前缀约定为 `feature`、`fix`、`refactor`、`docs`、`chore`、`research`。
 - linked worktree 中会写公共 Git 目录的命令（fetch、worktree add、commit、push -u、设置 upstream），统一经参数文件给出的包装器执行。被沙箱拦截是权限问题，不代表仓库损坏。
 - 同一工作区同时只有一个写入者：开发交审时停写，审查结束取证后才交回。
+- 已授权的修改任务，在自己的任务分支里暂存、提交、推送、建或更新 PR、满足门禁后转 Ready，都不逐个动作再问；用户要求只在本地、只读、暂不发布或停止时，从其要求。
 - 遇到归属不明的改动，保留原状并报告。
 
 ## 提交
@@ -41,11 +42,13 @@ description: 多代理用 Git 与 GitHub（Issue、PR、Discussion）协作时�
 
 先用已有证据，只为真实缺口补跑。push、改正文、切换状态都不是重跑的理由。证据怎么判、CI 怎么请求，按参数文件。
 
+`gh` 失败时保留命令和原文，分清网络、凭据读取、token 和仓库权限。代理环境读不到凭据，不等于用户本机没登录：按工具权限规则重试 `gh auth status` 和原命令；仍失败就报告“当前代理环境无法读取凭据或连接 GitHub”、原文和被阻断的动作。
+
 ## 审查闭环
 
-- 独立复核由与实现分离的上下文用 `pr-review` 完成，绑定一个完整 SHA。开发用 `implement` 处理发现并发 FIX-REPLY，审查方对完整增量复核。
-- REVIEW、FIX-REPLY、RECHECK 的格式只有一个来源：`pr-review` 的 `structured-review-output`。正式结论只留在原 PR 评论里；版本写完整 SHA，来源写评论永久链接。
-- 启用 `agent-message` 时，同一任务内开发与审查的交接，以及跨任务通知，都按它发消息。消息只做交接，不复制结论。
+- 独立复核由与实现分离的上下文调用 Skill 工具：`pr-review` 完成，绑定一个完整 SHA。开发调用 Skill 工具：`implement` 处理发现并发 FIX-REPLY，审查方对完整增量复核。
+- REVIEW、FIX-REPLY、RECHECK 的格式只有一个来源：`pr-review` 的 `structured-review-output` reference。正式结论只留在原 PR 评论里；版本写完整 SHA，来源写评论永久链接。
+- 开工指令启用了 `agent-message` 时，同一任务内开发与审查的交接，以及跨任务通知，都按它发消息。消息只做交接，不复制结论。
 
 ## Ready 与合并
 
