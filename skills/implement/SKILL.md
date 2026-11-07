@@ -15,4 +15,4 @@ description: 按任务卡、规格或 Issue 实现或修复生产行为时使用
 - 验证失败按原类别单独说明：预期 RED、缺环境依赖、与本任务无关的既有失败分开写，不借机扩大改动；类型、import 或业务逻辑失败不报成 lint。
 - 注释只写代码表达不了的原因：外部限制、不明显的约束、临时绕行及何时撤掉；规范编号和过程记录不进注释，改到的旧注释里有就顺手删掉。
 - 任务命题装不下所需工作时，停止受影响部分，调用 Skill 工具：`task-closure` 报告边界，不在实现上下文设计子任务。
-- 做完后对照任务、实际 diff 和验证自审，提交到当前任务分支；交付调用 Skill 工具：`pr-delivery`。
+- 做完后对照任务、实际 diff 和验证自审，提交到当前任务分支；交付调用 Skill 工具：`pr-delivery`。PR 开出后按 [structured-review-output 的“等待对方评论”](../pr-review/references/structured-review-output.md#等待对方评论) 等审查结论；收到 MUST 就读 [review-fix](references/review-fix.md)。
