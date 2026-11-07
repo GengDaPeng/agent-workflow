@@ -12,6 +12,23 @@
 
 Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数文件缺的项按 Skill 默认值执行。
 
+## 接入
+
+需要 Node 18 以上和已登录的 `gh`。
+
+1. 在仓库根安装要用的 Skill，`.agents/skills/` 与生成的 `skills-lock.json` 一起提交：
+
+   ```bash
+   DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow pr-review pr-delivery implement --agent claude-code codex -y
+   ```
+
+2. 把 [`templates/`](templates/) 复制到仓库根，按项目填写：
+   - `docs/agents/*.md`：每个文件第一行写着哪些 Skill 读它，只复制已装 Skill 用到的。不需要的行删掉，Skill 按“缺省”列执行。
+   - `.agents/project.json`：共享脚本读的机器参数，字段见下节；`commentIdentityPrefix` 要与 `git.md` 的评论身份行一致。
+   - `.github/pull_request_template.md`：`pr-body-check.js` 校验的四段。
+   - `.githooks/pre-commit`：执行 `git config core.hooksPath .githooks` 启用；已有 hook 时把其中一行并进去。
+3. 改共享 Skill 时，先在本仓库改并推到 `main`，再在使用方重跑第 1 步的命令同步。直接改 `.agents/skills/` 会被 pre-commit 的锁检查拦下。
+
 ## 共享检查脚本
 
 只带轻量检查，重型 CI 证据复用留在使用方仓库。脚本从使用方仓库根的 `.agents/project.json` 读机器参数，文件缺失时全部用默认值：

@@ -1,0 +1,7 @@
+{
+  "repository": "owner/name",
+  "mainRef": "origin/main",
+  "gitWrapper": "git",
+  "commentIdentityPrefix": "myproject",
+  "taskIdPattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+-\\d+$"
+}
