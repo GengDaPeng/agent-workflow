@@ -58,7 +58,10 @@ test('CLI 在安装布局下读取 .agents/project.json 的 commentIdentityPrefi
     const script = path.join(root, '.agents/skills/pr-review/scripts/pr-comments-check.js');
     assert.equal(runCli(script, reviewBody({ identity: '评论者：other-model' }), root).status, 0);
     fs.writeFileSync(path.join(root, '.agents/project.json'), JSON.stringify({ commentIdentityPrefix: 'demo' }));
-    const rejected = runCli(script, reviewBody({ identity: '评论者：other-model' }), os.tmpdir());
+    // 从项目外的空目录运行，证明配置按脚本安装位置查找；不写共享的 os.tmpdir() 根目录。
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-comments-outside-'));
+    const rejected = runCli(script, reviewBody({ identity: '评论者：other-model' }), outside);
+    fs.rmSync(outside, { recursive: true, force: true });
     assert.equal(rejected.status, 1);
     assert.match(rejected.stderr, /身份首行/);
     const accepted = runCli(script, reviewBody(), root);
