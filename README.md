@@ -16,18 +16,31 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 
 需要 Node 18 以上和已登录的 `gh`。
 
-1. 在仓库根安装要用的 Skill，`.agents/skills/` 与生成的 `skills-lock.json` 一起提交：
+1. 在仓库根安装要用的 Skill，`.agents/skills/` 与生成的 `skills-lock.json` 一起提交。Skill 之间会互相调用，按下表成组安装；单独列出的可以只装一个：
+
+   | 组 | Skill | 读的参数文件 |
+   |---|---|---|
+   | 交付 | `git-workflow`、`implement`、`pr-delivery`、`pr-review`、`task-closure`、`tdd`、`diagnosing-bugs` | `git.md`、`testing.md`、`domain.md` |
+   | 主控（需先装交付组） | `project-control`、`agent-message` | `control.md` |
+   | Issue 分流与拆票 | `triage`、`to-tickets`、`domain-modeling`、`grilling` | `issue-tracker.md`、`triage-labels.md`、`domain.md` |
+   | 探索 | `wayfinder`、`research`、`prototype`、`domain-modeling`、`grilling` | `issue-tracker.md`、`git.md`、`domain.md` |
+   | 架构 | `improve-codebase-architecture`、`codebase-design`、`domain-modeling`、`grilling` | `domain.md` |
+   | 单独 | `two-axis-code-review` | `review.md`、`issue-tracker.md` |
+   | 单独 | `writing-for-agents`（会调用 `tdd`、`domain-modeling`） | `review.md` |
+   | 单独 | `wait-what` | `domain.md` |
+
+   `pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
 
    ```bash
-   DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow pr-review pr-delivery implement --agent claude-code codex -y
+   DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow implement pr-delivery pr-review task-closure tdd diagnosing-bugs --agent claude-code codex -y
    ```
 
 2. 把 [`templates/`](templates/) 复制到仓库根，按项目填写：
-   - `docs/agents/*.md`：每个文件第一行写着哪些 Skill 读它，只复制已装 Skill 用到的。不需要的行删掉，Skill 按“缺省”列执行。
-   - `.agents/project.json`：共享脚本读的机器参数，字段见下节；`commentIdentityPrefix` 要与 `git.md` 的评论身份行一致。
+   - `docs/agents/*.md`：只复制上表里已装 Skill 用到的。不需要的行删掉，Skill 按“缺省”列执行；行末括号标了某个 Skill 的，没装那个 Skill 就删掉该行。`model-routing.md` 是可选的子代理模型表，`git.md`、`control.md` 的“子代理模型”行指向它。
+   - `.agents/project.json`：共享脚本读的机器参数，字段见下节；`commentIdentityPrefix` 要与 `git.md` 的评论身份行一致。没有自己的 Ready 门禁就删掉 `readyCheck`，用共享的轻量检查。
    - `.github/pull_request_template.md`：`pr-body-check.js` 校验的四段。
-   - `.githooks/pre-commit`：执行 `git config core.hooksPath .githooks` 启用；已有 hook 时把其中一行并进去。
-3. 改共享 Skill 时，先在本仓库改并推到 `main`，再在使用方重跑第 1 步的命令同步。直接改 `.agents/skills/` 会被 pre-commit 的锁检查拦下。
+   - `.githooks/pre-commit`：执行 `git config core.hooksPath .githooks` 启用；已有 hook 时把其中一行并进去。hook 里如果还跑测试，先清掉 git 传进来的 `GIT_DIR`、`GIT_INDEX_FILE` 等变量，否则测试里的 `git init`、`git config` 会改写真仓库的 `.git/config`。
+3. 改共享 Skill 时，先在本仓库改并推到 `main`，再在使用方运行 `DISABLE_TELEMETRY=1 npx skills@1.7.6 update <名字> -p -y` 同步；新增 Skill 用第 1 步的 `add`。直接改 `.agents/skills/` 会被 pre-commit 的锁检查拦下，误改就撤销本地改动。
 
 ## 共享检查脚本
 
@@ -38,7 +51,7 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 | `repository` | `gh repo view` | `owner/name` |
 | `gitWrapper` | `git` | 写公共 Git 目录时用的命令 |
 | `commentIdentityPrefix` | 任意 `<项目>-<模型ID>` | 评论身份行前缀 |
-| `taskIdPattern` | 通用任务编号正则 | 任务卡 Task 字段 |
+| `taskIdPattern` | 至少三段，如 `WEB-AUTH-12` | 任务卡 Task 字段；用两段编号（如 `ABC-12`）的项目要改 |
 | `readyCheck` | `pr-review/scripts/ready-check.js` | 项目自己的 Ready 命令模板，`{pr}` 替换为 PR 号 |
 
 | 脚本 | 作用 |

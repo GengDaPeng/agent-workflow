@@ -11,13 +11,13 @@
 | PR 模板 | `.github/pull_request_template.md` | Summary、Context、Verification、Merge Danger 四段 |
 | 交付 Skill | `pr-delivery` | `pr-delivery` |
 | 评论身份行 | `评论者：<项目>-<模型ID>` | `评论者：<模型ID>` |
-| 专项审查方法 | 代理指令：`writing-for-agents`；测试：`tdd` 的 `test-design` reference；说明性注释：`two-axis-code-review` 的 `code-quality` reference | 直接审查 |
+| 专项审查方法 | 代理指令：`writing-for-agents`；测试：`tdd` 的 `test-design` reference；说明性注释：`two-axis-code-review` 的 `code-quality` reference（各项只留已装的 Skill） | 直接审查 |
 | 设计检查点 Skill | `<项目的设计 Skill>` | 无，跳过设计检查点 |
-| 子代理模型 | `<审查用什么模型、思考深度>` | — |
+| 子代理模型 | [model-routing.md](model-routing.md) | — |
 | 修复轮次上限 | 3 | 3 |
 | 合并方式 | `--merge` | `--merge` |
 | 破坏性操作例外 | 无 | 无，一律先问用户 |
-| Wayfinder 研究分支 | `research/<issue>-<topic>` | 同左 |
+| Wayfinder 研究分支（`wayfinder`） | `research/<issue>-<topic>` | 同左 |
 | 责任方 | 产品取舍交用户，技术取舍交`<主控或用户>` | 用户 |
 
 ## 命令

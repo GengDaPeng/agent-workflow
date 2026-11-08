@@ -1,6 +1,7 @@
 {
   "repository": "owner/name",
   "gitWrapper": "git",
-  "commentIdentityPrefix": "myproject",
-  "taskIdPattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+-\\d+$"
+  "commentIdentityPrefix": "my-project",
+  "taskIdPattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+-\\d+$",
+  "readyCheck": "node .agents/skills/pr-review/scripts/ready-check.js --pr {pr}"
 }
