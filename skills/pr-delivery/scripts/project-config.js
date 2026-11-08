@@ -13,7 +13,7 @@ const nonEmpty = () => true;
 const FIELDS = {
   repository: (value) => /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value) || '必须是 owner/name',
   gitWrapper: nonEmpty,
-  commentIdentityPrefix: (value) => /^[^\s-]+$/.test(value) || '不能含空白或连字符',
+  commentIdentityPrefix: (value) => /^\S+$/.test(value) || '不能含空白',
   taskIdPattern: (value) => {
     try { new RegExp(value); return true; } catch (error) { return `不是合法正则：${error.message}`; }
   },

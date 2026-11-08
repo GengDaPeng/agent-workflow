@@ -81,13 +81,13 @@ test('project.json：缺失用默认值，字段错误写明字段，安装布�
     assert.deepEqual(loadProjectConfig(root), { gitWrapper: 'git' });
     fs.mkdirSync(path.join(root, '.agents'));
     const write = (value) => fs.writeFileSync(path.join(root, '.agents/project.json'), JSON.stringify(value));
-    write({ repository: REPO, commentIdentityPrefix: 'app', readyCheck: 'make ready PR={pr}' });
+    write({ repository: REPO, commentIdentityPrefix: 'my-app', readyCheck: 'make ready PR={pr}' });
     assert.equal(loadProjectConfig(root).readyCheck, 'make ready PR={pr}');
     assert.equal(loadProjectConfig(root).gitWrapper, 'git');
     for (const [value, field] of [
       [{ repository: 'no-slash' }, 'repository'], [{ taskIdPattern: '(' }, 'taskIdPattern'],
       [{ readyCheck: 'make ready' }, 'readyCheck'], [{ gitWrapper: '' }, 'gitWrapper'],
-      [{ commentIdentityPrefix: 'a-b' }, 'commentIdentityPrefix'],
+      [{ commentIdentityPrefix: 'a b' }, 'commentIdentityPrefix'],
     ]) {
       write(value);
       assert.throws(() => loadProjectConfig(root), new RegExp(`字段 ${field} 格式错误`));

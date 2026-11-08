@@ -22,6 +22,8 @@ test('身份前缀：未配置接受任意 <项目>-<模型ID>，配置后只接
   assert.equal(readReviewCredential({ body: reviewBody({ identity: '评论者：other-model' }) }, 0, { identityPrefix: 'demo' }).hasIdentity, false);
   assert.equal(readReviewCredential({ body: reviewBody() }, 0, { identityPrefix: 'demo' }).hasIdentity, true);
   assert.match(check([{ body: reviewBody({ identity: '评论者：other-model' }) }], { identityPrefix: 'demo' })[0], /身份首行/);
+  assert.equal(readReviewCredential({ body: reviewBody({ identity: '评论者：my-app-model-1' }) }, 0, { identityPrefix: 'my-app' }).hasIdentity, true);
+  assert.equal(readReviewCredential({ body: reviewBody({ identity: '评论者：my-model-1' }) }, 0, { identityPrefix: 'my-app' }).hasIdentity, false);
 });
 
 test('current head 需要合法 PASS 凭据；B级免检；祖先版本由注入函数判断', () => {

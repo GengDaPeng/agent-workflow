@@ -31,7 +31,7 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 
 ## 共享检查脚本
 
-只带轻量检查，重型 CI 证据复用留在使用方仓库。脚本从使用方仓库根的 `.agents/project.json` 读机器参数，文件缺失时全部用默认值：
+只带轻量检查，重型 CI 证据复用留在使用方仓库。脚本是 CommonJS，各 `scripts/` 的 `package.json` 声明了 `"type": "commonjs"`，使用方根 `package.json` 设 `"type": "module"` 也能直接运行。脚本从使用方仓库根的 `.agents/project.json` 读机器参数，文件缺失时全部用默认值：
 
 | 字段 | 缺省 | 说明 |
 |---|---|---|
