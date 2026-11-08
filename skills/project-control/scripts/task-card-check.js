@@ -25,19 +25,40 @@ function contentHash(value) {
 }
 
 function withoutCodeBlocks(value) {
-  let fence = null;
-  return String(value || '').split(/\r?\n/).map((line) => {
-    const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (!fence && marker) {
-      fence = { char: marker[1][0], length: marker[1].length };
-      return '';
-    }
+  let fence = null, comment = false;
+  return String(value || '').split(/\r?\n/).map(raw => {
     if (fence) {
-      const closing = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      const closing = raw.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
       if (closing && closing[1][0] === fence.char && closing[1].length >= fence.length) fence = null;
       return '';
     }
-    if (/^(?: {4}| {0,3}\t)/.test(line)) return '';
+    if (!comment && /^(?: {4}| {0,3}\t)/.test(raw)) return '';
+    const opener = !comment && raw.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (opener) { fence = { char: opener[1][0], length: opener[1].length }; return ''; }
+    let line = '', remaining = raw;
+    while (remaining) {
+      if (comment) {
+        const end = remaining.indexOf('-->');
+        if (end < 0) break;
+        comment = false;
+        remaining = remaining.slice(end + 3);
+      } else {
+        const start = remaining.indexOf('<!--');
+        if (start < 0) { line += remaining; break; }
+        const code = remaining.match(/(?<![\\`])(?:\\\\)*(`+)(?!`)(.*?)(?<!`)\1(?!`)/);
+        if (code && code.index < start) {
+          const end = code.index + code[0].length;
+          line += remaining.slice(0, end);
+          remaining = remaining.slice(end);
+          continue;
+        }
+        line += remaining.slice(0, start);
+        comment = true;
+        remaining = remaining.slice(start + 4);
+      }
+    }
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (marker) { fence = { char: marker[1][0], length: marker[1].length }; return ''; }
     return line;
   }).join('\n');
 }
@@ -176,7 +197,7 @@ function parseTaskCard(comment, requested, { taskIdPattern } = {}) {
     errors.push('任务卡首行必须是“评论者：<项目>-<模型ID>”。');
   }
   const markerIndexes = lines
-    .map((line, index) => (line.trim() === TASK_CARD_MARKER ? index : -1))
+    .map((line, index) => (line.trimEnd() === TASK_CARD_MARKER ? index : -1))
     .filter((index) => index >= 0);
   if (markerIndexes.length !== 1) {
     errors.push(`任务卡必须且只能包含一个 ${TASK_CARD_MARKER} 标记。`);
@@ -185,7 +206,7 @@ function parseTaskCard(comment, requested, { taskIdPattern } = {}) {
   const markerIndex = markerIndexes[0] ?? 0;
   const firstHeading = lines.findIndex((line, index) => index > markerIndex && /^##\s+/.test(line));
   const metadata = lines.slice(markerIndex + 1, firstHeading >= 0 ? firstHeading : lines.length)
-    .map((line) => line.trim())
+    .map((line) => line.trimEnd())
     .filter(Boolean);
   const tasks = metadata.map((line) => line.match(/^[-*]\s*Task:\s*(.+)$/)?.[1]
     || line.match(/^Task:\s*(.+)$/)?.[1]).filter(Boolean);
@@ -258,7 +279,7 @@ function activeTaskCardComments(pages) {
   }
   return pages.flat().filter((comment) => {
     const lines = withoutCodeBlocks(comment?.body).split(/\r?\n/);
-    return Boolean(comment?.pin) && lines.some((line) => line.trim() === TASK_CARD_MARKER);
+    return Boolean(comment?.pin) && lines.some((line) => line.trimEnd() === TASK_CARD_MARKER);
   });
 }
 

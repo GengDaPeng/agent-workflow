@@ -90,3 +90,24 @@ test('project.json 字段错误写明字段', () => {
   assert.throws(() => parseProjectConfig('[]'), /顶层必须是对象/);
   assert.throws(() => parseProjectConfig('{'), /不是合法 JSON/);
 });
+
+test('代码块、HTML 注释和缩进里的标记与字段不算活动合同', () => {
+  const base = comment('201');
+  const run = (body) => checkCurrentTaskCard({ taskUrl: base.html_url, repository: REPO, ghRunner: gh({ ...base, body }) });
+  const head = '[TASK-CARD]\n- Task: APP-UI-7\n- Grade: A级';
+  const hidden = [
+    base.body.replace(head, '\n- ```\n  [TASK-CARD]\n  Task: APP-UI-7\n  Grade: B级'),
+    base.body.replace('[TASK-CARD]', '<!--\n[TASK-CARD]\n-->'),
+    base.body.replace('[TASK-CARD]', '<!--\n[TASK-CARD]'),
+    base.body.replace('- Grade: A级', '<!-- - Grade: A级 -->'),
+    ...[1, 3].map((n) => base.body.replace('- Grade: A级', `说明 ${'\\'.repeat(n)}\`<!-- \`\n- Grade: B级\n-->`)),
+    base.body.replace('[TASK-CARD]', '```md\n<!--\n```\n-->\n```\n[TASK-CARD]') + '```\n',
+  ];
+  for (const body of hidden) assert.equal(run(body).card, null, body);
+  const visible = [
+    ...['`<!--`', '``<!--``', '\\\\`<!--`', '`<!--\\`'].map((literal) => base.body.replace('- npm test', `- ${literal}\n- npm test`)),
+    base.body.replace('## 验证', '## 验证\n```md\n<!--\n```'),
+    base.body.replace('[TASK-CARD]', '<!--\n```md\n-->\n[TASK-CARD]'),
+  ];
+  for (const body of visible) assert.deepEqual(run(body).errors, [], body);
+});
