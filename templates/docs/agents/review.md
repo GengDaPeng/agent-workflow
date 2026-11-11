@@ -1,6 +1,6 @@
 # 审查参数
 
-`two-axis-code-review`、`writing-for-agents`（代理指令审查）、`zong-heng-audit` 与 `map-semantic-units` 的项目参数。不需要的行删掉，Skill 按“缺省”执行；行末括号标了某个 Skill 的，没装那个 Skill 就删掉该行。
+`two-axis-code-review`、`writing-for-agents`（代理指令审查）、`zong-heng-design`、`zong-heng-audit` 与 `map-semantic-units` 的项目参数。不需要的行删掉，Skill 按“缺省”执行；行末括号标了某个 Skill 的，没装那个 Skill 就删掉该行。
 
 | 参数 | 本项目取值 | 缺省 |
 |---|---|---|

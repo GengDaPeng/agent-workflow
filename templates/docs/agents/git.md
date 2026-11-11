@@ -12,7 +12,7 @@
 | 交付 Skill | `pr-delivery` | `pr-delivery` |
 | 评论身份行 | `评论者：<项目>-<模型ID>` | `评论者：<模型ID>` |
 | 专项审查方法 | 改变系统行为或结构的改动（生产代码、数据模型、接口、迁移、运行配置），以及设计稿与用户可见页面：`zong-heng-audit`；代理指令：`writing-for-agents`；测试：`tdd` 的 `test-design` reference；说明性注释：`two-axis-code-review` 的 `code-quality` reference（各项只留已装的 Skill） | 直接审查 |
-| 设计检查点 Skill | `<项目的设计 Skill>` | 无，跳过设计检查点 |
+| 设计检查点 Skill | `zong-heng-design`，或项目自己的设计 Skill | 无，跳过设计检查点 |
 | 子代理模型 | [model-routing.md](model-routing.md) | — |
 | 修复轮次上限 | 3 | 3 |
 | 合并方式 | `--merge` | `--merge` |
