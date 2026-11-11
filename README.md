@@ -28,8 +28,10 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
    | 语义设计与审查（需先装交付组） | `zong-heng-design`、`zong-heng-audit`、`map-semantic-units` | `review.md` |
    | 单独 | `writing-for-agents`（会调用 `tdd`、`domain-modeling`） | `review.md` |
    | 单独 | `wait-what` | `domain.md` |
+   | 单独 | `test-audit`（会调用 `tdd`） | `testing.md` |
+   | 单独 | `github-discussion` | 无 |
 
-   `implement` 的自审调用 `two-axis-code-review`。`zong-heng-design` 的问法引用 `zong-heng-audit` 的十二问，两者要一起装；它们的工作地图由 `map-semantic-units` 提供。`zong-heng-audit` 发现项的处置与评论格式用 `task-closure`、`pr-review`，验证设计用 `tdd`。`pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
+   `implement` 的自审调用 `two-axis-code-review`。`zong-heng-design` 的问法引用 `zong-heng-audit` 的十二问，两者要一起装；设计里的技术取舍交给谁，它读 `git.md` 的“责任方”；它们的工作地图由 `map-semantic-units` 提供。`zong-heng-audit` 发现项的处置与评论格式用 `task-closure`、`pr-review`，验证设计用 `tdd`。`pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
 
    ```bash
    DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow implement pr-delivery pr-review task-closure tdd diagnosing-bugs two-axis-code-review --agent claude-code codex -y
@@ -92,9 +94,11 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 | `grilling` | 按决策树逐轮追问，直到双方理解一致 |
 | `research` | 对照一手资料调研并标注出处 |
 | `prototype` | 做一次性原型回答设计问题（逻辑或界面） |
+| `test-audit` | 审计并清理低价值、重复或与实现耦合的测试，以及只为测试存在的生产接缝 |
+| `github-discussion` | 手动调用：创建、回复、修订、阶段收敛或关闭 GitHub Discussion |
 
 ## 致谢
 
 `codebase-design`、`diagnosing-bugs`、`domain-modeling`、`tdd`、`wait-what`、`writing-for-agents`、`triage`、`to-tickets`、`wayfinder`、`improve-codebase-architecture`、`grilling`、`research`、`prototype` 派生自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT，许可见 [LICENSE.matt-pocock](LICENSE.matt-pocock)）；`two-axis-code-review` 由其 `code-review` 改造而来，`implement` 以其 `implement` 为骨架，`pr-delivery` 的 PR 正文写法改编自其 `pr`。`pr` 中 Summary 的视图清单出自 [Dex Horthy](https://github.com/dexhorthy) 的 [`show-me`](https://github.com/humanlayer/humanlayer)。
 
-`git-workflow`、`pr-review`、`pr-delivery`、`task-closure`、`agent-message`、`project-control`、`zong-heng-design`、`zong-heng-audit`、`map-semantic-units` 是本仓库在多代理协作中整理出的约定。
+`git-workflow`、`pr-review`、`pr-delivery`、`task-closure`、`agent-message`、`project-control`、`test-audit`、`github-discussion`、`zong-heng-design`、`zong-heng-audit`、`map-semantic-units` 是本仓库在多代理协作中整理出的约定。
