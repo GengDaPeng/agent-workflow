@@ -20,20 +20,19 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 
    | 组 | Skill | 读的参数文件 |
    |---|---|---|
-   | 交付 | `git-workflow`、`implement`、`pr-delivery`、`pr-review`、`task-closure`、`tdd`、`diagnosing-bugs` | `git.md`、`testing.md`、`domain.md` |
+   | 交付 | `git-workflow`、`implement`、`pr-delivery`、`pr-review`、`task-closure`、`tdd`、`diagnosing-bugs`、`two-axis-code-review` | `git.md`、`testing.md`、`domain.md`、`review.md`、`issue-tracker.md` |
    | 主控（需先装交付组） | `project-control`、`agent-message` | `control.md` |
    | Issue 分流与拆票 | `triage`、`to-tickets`、`domain-modeling`、`grilling` | `issue-tracker.md`、`triage-labels.md`、`domain.md` |
    | 探索 | `wayfinder`、`research`、`prototype`、`domain-modeling`、`grilling` | `issue-tracker.md`、`git.md`、`domain.md` |
    | 架构 | `improve-codebase-architecture`、`codebase-design`、`domain-modeling`、`grilling` | `domain.md` |
-   | 单独 | `two-axis-code-review` | `review.md`、`issue-tracker.md` |
    | 语义审查（需先装交付组） | `zong-heng-audit`、`map-semantic-units` | `review.md` |
    | 单独 | `writing-for-agents`（会调用 `tdd`、`domain-modeling`） | `review.md` |
    | 单独 | `wait-what` | `domain.md` |
 
-   `zong-heng-audit` 的工作地图由 `map-semantic-units` 提供，发现项的处置与评论格式用 `task-closure`、`pr-review`，验证设计用 `tdd`。`pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
+   `implement` 的自审调用 `two-axis-code-review`。`zong-heng-audit` 的工作地图由 `map-semantic-units` 提供，发现项的处置与评论格式用 `task-closure`、`pr-review`，验证设计用 `tdd`。`pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
 
    ```bash
-   DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow implement pr-delivery pr-review task-closure tdd diagnosing-bugs --agent claude-code codex -y
+   DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow implement pr-delivery pr-review task-closure tdd diagnosing-bugs two-axis-code-review --agent claude-code codex -y
    ```
 
 2. 把 [`templates/`](templates/) 复制到仓库根，按项目填写：

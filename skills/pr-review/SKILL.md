@@ -41,10 +41,10 @@ description: 审核或复查已有 GitHub PR 的 current head，或诊断其 CI�
 
 ## 内容审查
 
-1. 从 Context、任务目标和实际改动列出本次必须成立的核心主张，逐条直接审查。专项方法只加深实际命中的子命题，按参数文件的路由选用，不按分级、文件位置或内容类型机械套用。
+1. 从 Context、任务目标和实际改动列出本次必须成立的核心主张。参数文件的路由命中专项方法时，按该方法审：由它的步骤决定审什么，核心主张只是它的输入。没有命中的主张逐条直接审查。路由按实际改动判断，不按分级、文件位置或内容类型机械套用。
 2. RECHECK 审查来源 REVIEW 版本到 current head 的完整增量。所列 RR 是重点，不是唯一范围。
 3. 测试相关改动由主审按 Verification 的证明分组收口：核对正确性、独立价值和成本；重叠断言须说明删去一份会失去什么保护。
-4. 每个核心主张都有证据和结论后，按 [structured-review-output](references/structured-review-output.md) 成文并发布。
+4. 每个核心主张都有证据和结论、专项方法要求的答案齐全后，按 [structured-review-output](references/structured-review-output.md) 成文并发布。
 
 ## 边界
 
