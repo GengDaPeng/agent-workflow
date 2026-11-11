@@ -26,10 +26,11 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
    | 探索 | `wayfinder`、`research`、`prototype`、`domain-modeling`、`grilling` | `issue-tracker.md`、`git.md`、`domain.md` |
    | 架构 | `improve-codebase-architecture`、`codebase-design`、`domain-modeling`、`grilling` | `domain.md` |
    | 单独 | `two-axis-code-review` | `review.md`、`issue-tracker.md` |
+   | 语义审查（需先装交付组） | `zong-heng-audit`、`map-semantic-units` | `review.md` |
    | 单独 | `writing-for-agents`（会调用 `tdd`、`domain-modeling`） | `review.md` |
    | 单独 | `wait-what` | `domain.md` |
 
-   `pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
+   `zong-heng-audit` 的工作地图由 `map-semantic-units` 提供，发现项的处置与评论格式用 `task-closure`、`pr-review`，验证设计用 `tdd`。`pr-review` 的脚本 require `pr-delivery`；装了 `project-control` 时还会顺带校验任务卡。锁检查脚本在 `git-workflow` 里。
 
    ```bash
    DISABLE_TELEMETRY=1 npx skills@1.7.6 add GengDaPeng/agent-workflow --skill git-workflow implement pr-delivery pr-review task-closure tdd diagnosing-bugs --agent claude-code codex -y
@@ -80,6 +81,8 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 | `wayfinder` | 手动调用：把过大的想法拆成决策票地图，逐张解决 |
 | `improve-codebase-architecture` | 手动调用：找出可加深的模块，出 HTML 报告后逐个讨论 |
 | `two-axis-code-review` | 按规范与需求两条轴审查一段改动 |
+| `zong-heng-audit` | 纵横审查：沿一次执行的因果链和同一事物的全部出现处，审语义与工程形状是否成立 |
+| `map-semantic-units` | 建立或恢复一次语义改动的工作地图，设计、实现、测试、审查共用 |
 | `pr-review` | 审查或诊断 live PR 的 current head；REVIEW / FIX-REPLY / RECHECK 评论协议 |
 | `pr-delivery` | 创建或更新 PR、写正文、等 CI、修交付门禁、转 Ready |
 | `implement` | 按任务实现或修复，处理审查发现并发 FIX-REPLY |
@@ -94,4 +97,4 @@ Skill 开头会写明它读取哪个参数文件、需要哪些参数；参数�
 
 `codebase-design`、`diagnosing-bugs`、`domain-modeling`、`tdd`、`wait-what`、`writing-for-agents`、`triage`、`to-tickets`、`wayfinder`、`improve-codebase-architecture`、`grilling`、`research`、`prototype` 派生自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT，许可见 [LICENSE.matt-pocock](LICENSE.matt-pocock)）；`two-axis-code-review` 由其 `code-review` 改造而来，`implement` 以其 `implement` 为骨架，`pr-delivery` 的 PR 正文写法改编自其 `pr`。`pr` 中 Summary 的视图清单出自 [Dex Horthy](https://github.com/dexhorthy) 的 [`show-me`](https://github.com/humanlayer/humanlayer)。
 
-`git-workflow`、`pr-review`、`pr-delivery`、`task-closure`、`agent-message`、`project-control` 是本仓库在多代理协作中整理出的约定。
+`git-workflow`、`pr-review`、`pr-delivery`、`task-closure`、`agent-message`、`project-control`、`zong-heng-audit`、`map-semantic-units` 是本仓库在多代理协作中整理出的约定。

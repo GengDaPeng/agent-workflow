@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Semantic Units"
+  short_description: "Map owners, invariants, edges, and proof duties"
+  default_prompt: "Use $map-semantic-units to identify the semantic units, owners, invariants, critical edges, and proof responsibilities in this change."
